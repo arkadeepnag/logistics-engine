@@ -7,26 +7,30 @@ export class ShipmentCollectionResolver {
     private readonly inTransitModel: Model<any>,
     private readonly outForDeliveryModel: Model<any>,
     private readonly deliveredModel: Model<any>,
-  ) {}
+    private readonly returnModel: Model<any>,
+  ) { }
+
+  getModel(name: string): Model<any> {
+    const map = {
+      created: this.createdModel,
+      in_transit: this.inTransitModel,
+      out_for_delivery: this.outForDeliveryModel,
+      delivered: this.deliveredModel,
+      return: this.returnModel,
+    };
+
+    const model = map[name];
+    if (!model) throw new Error(`No model for collection ${name}`);
+    return model;
+  }
 
   async findByShipmentId(shipmentId: string) {
     return (
       (await this.createdModel.findOne({ shipment_id: shipmentId })) ||
       (await this.inTransitModel.findOne({ shipment_id: shipmentId })) ||
       (await this.outForDeliveryModel.findOne({ shipment_id: shipmentId })) ||
-      (await this.deliveredModel.findOne({ shipment_id: shipmentId }))
+      (await this.deliveredModel.findOne({ shipment_id: shipmentId })) ||
+      (await this.returnModel.findOne({ shipment_id: shipmentId }))
     );
   }
-
-  async listAll(filters: any = {}) {
-    const [a, b, c, d] = await Promise.all([
-      this.createdModel.find(filters),
-      this.inTransitModel.find(filters),
-      this.outForDeliveryModel.find(filters),
-      this.deliveredModel.find(filters),
-    ]);
-
-    return [...a, ...b, ...c, ...d];
-  }
 }
-
